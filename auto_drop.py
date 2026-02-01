@@ -190,7 +190,8 @@ pika father @kokakeki"""
 app = Client(
     SESSION_NAME,
     api_id=int(API_ID),
-    api_hash=API_HASH
+    api_hash=API_HASH,
+    phone_number=PHONE_NUMBER if PHONE_NUMBER else None
 )
 
 
