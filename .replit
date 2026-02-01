@@ -1,0 +1,14 @@
+run = "pip install -r requirements.txt && python auto_drop.py"
+entrypoint = "auto_drop.py"
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "pip install -r requirements.txt && python auto_drop.py"]
+deploymentTarget = "cloudrun"
+
+[env]
+PYTHONUNBUFFERED = "1"
+PYTHONUTF8 = "1"

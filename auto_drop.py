@@ -28,9 +28,36 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
+# Check if running on Replit
+IS_REPLIT = os.environ.get('REPL_ID') is not None or os.environ.get('REPLIT') is not None
+
+# Import keep_alive for Replit
+if IS_REPLIT:
+    try:
+        from keep_alive import keep_alive
+        KEEP_ALIVE_AVAILABLE = True
+    except ImportError:
+        KEEP_ALIVE_AVAILABLE = False
+else:
+    KEEP_ALIVE_AVAILABLE = False
+
 # Configuration
 CHANNEL_USERNAME = "pikadump"  # Channel to post to
-IMAGE_PATH = Path(r"C:\Users\Administrator\Desktop\1769984384062.webp")
+
+# Image path - check multiple locations
+def get_image_path():
+    """Find the image in multiple possible locations"""
+    possible_paths = [
+        Path("card_image.webp"),  # Replit - same directory
+        Path("card_image.jpg"),   # Replit - already converted
+        Path(r"C:\Users\Administrator\Desktop\1769984384062.webp"),  # Windows original
+    ]
+    for p in possible_paths:
+        if p.exists():
+            return p
+    return Path("card_image.webp")  # Default for Replit
+
+IMAGE_PATH = get_image_path()
 CONVERTED_IMAGE = Path("temp_image.jpg")
 BIN_DATABASE_FILE = Path("bin-list-data.csv")
 
@@ -247,7 +274,13 @@ async def main():
     print("   Auto Drop - Real-time Card Monitor & Poster")
     print("=" * 60)
     print(f"   Target Channel: @{CHANNEL_USERNAME}")
+    if IS_REPLIT:
+        print("   Mode: Replit 24/7")
     print("=" * 60)
+    
+    # Start keep-alive server for Replit
+    if IS_REPLIT and KEEP_ALIVE_AVAILABLE:
+        keep_alive()
     
     # Load BIN database
     load_bin_database()
