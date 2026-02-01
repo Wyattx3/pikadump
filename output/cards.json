@@ -1,0 +1,22 @@
+[
+  {
+    "card_number": "5173526535029569",
+    "card_type": "Mastercard",
+    "expiry_month": 12,
+    "expiry_year": 2028,
+    "cvv": "192",
+    "raw_text": "• ┌ Card » 5173526535029569|12|2028|192",
+    "source_channel": "Johnny Sins Chat",
+    "date_found": "2026-02-02 06:13:22"
+  },
+  {
+    "card_number": "5196032165817905",
+    "card_type": "Mastercard",
+    "expiry_month": 1,
+    "expiry_year": 2028,
+    "cvv": "283",
+    "raw_text": "⚜️ CC -» 5196032165817905|01|2028|283",
+    "source_channel": "lawliet group",
+    "date_found": "2026-02-02 06:13:22"
+  }
+]
