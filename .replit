@@ -7,8 +7,16 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["sh", "-c", "pip install -r requirements.txt && python auto_drop.py"]
-deploymentTarget = "cloudrun"
+deploymentTarget = "gce"
+ignorePorts = true
 
 [env]
 PYTHONUNBUFFERED = "1"
 PYTHONUTF8 = "1"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[agent]
+expertMode = true
