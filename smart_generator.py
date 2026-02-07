@@ -248,18 +248,37 @@ class SmartGenerator:
         return patterns
     
     def generate_cards(self, count: int) -> List[Dict]:
-        """Generate specified number of cards"""
+        """Generate specified number of cards with diverse BINs"""
         if not self.patterns:
             print("[!] No patterns loaded. Call build_patterns first.")
             return []
         
-        patterns = self.get_sorted_patterns()
+        patterns = list(self.patterns.values())
         result = []
+        used_bins = set()
         
-        # Distribute across patterns
-        cards_per_pattern = max(1, count // len(patterns))
+        # For small counts, use random selection for diversity
+        if count <= 10:
+            attempts = 0
+            while len(result) < count and attempts < count * 3:
+                attempts += 1
+                pattern = random.choice(patterns)
+                bin6 = pattern.prefix[:6]
+                
+                # Try to avoid duplicate BINs
+                if bin6 in used_bins and attempts < count * 2:
+                    continue
+                
+                card = self.generate_from_pattern(pattern)
+                result.append(card)
+                used_bins.add(bin6)
+            return result
         
-        for pattern in patterns:
+        # For larger counts, distribute across patterns
+        sorted_patterns = self.get_sorted_patterns()
+        cards_per_pattern = max(1, count // len(sorted_patterns))
+        
+        for pattern in sorted_patterns:
             for _ in range(cards_per_pattern):
                 card = self.generate_from_pattern(pattern)
                 result.append(card)
@@ -282,17 +301,23 @@ class SmartGenerator:
         return result[:count]
     
     def generate_single(self) -> Optional[Dict]:
-        """Generate a single card"""
+        """Generate a single card with diverse BIN selection"""
         if not self.patterns:
             return None
         
-        # Pick weighted random pattern (prefer higher count)
         patterns = list(self.patterns.values())
-        weights = [p.count for p in patterns]
-        total = sum(weights)
-        weights = [w / total for w in weights]
         
-        pattern = random.choices(patterns, weights=weights, k=1)[0]
+        # 70% random selection for diversity, 30% weighted by quality
+        if random.random() < 0.7:
+            # Pure random for diversity
+            pattern = random.choice(patterns)
+        else:
+            # Weighted by count (quality patterns)
+            weights = [p.count for p in patterns]
+            total = sum(weights)
+            weights = [w / total for w in weights]
+            pattern = random.choices(patterns, weights=weights, k=1)[0]
+        
         return self.generate_from_pattern(pattern)
 
 

@@ -46,18 +46,22 @@ else:
 
 # ==================== CONFIGURATION ====================
 CHANNEL_USERNAME = "pikadump"  # Channel to post to
-CARDS_FILE = Path("output/cards.json")
-BIN_DATABASE_FILE = Path("bin-list-data.csv")
+
+# Get script directory for relative paths
+SCRIPT_DIR = Path(__file__).parent.resolve()
+CARDS_FILE = SCRIPT_DIR / "output" / "cards.json"
+BIN_DATABASE_FILE = SCRIPT_DIR / "bin-list-data.csv"
 
 # Generation settings
 GENERATION_ENABLED = True
-GENERATION_INTERVAL = 300  # seconds (5 minutes)
-CARDS_PER_DROP = 5  # Cards to generate per drop
+GENERATION_INTERVAL = 2  # seconds - generate every 2 sec
+CARDS_PER_DROP = 1  # 1 card per drop
 MIN_CARDS_TO_LEARN = 50  # Minimum cards before starting generation
+INITIAL_GEN_DELAY = 2  # Start generating after 2 seconds
 
 # Image settings
-IMAGE_PATH = Path("card_image.webp") if Path("card_image.webp").exists() else Path("card_image.jpg")
-CONVERTED_IMAGE = Path("temp_image.jpg")
+IMAGE_PATH = SCRIPT_DIR / "card_image.webp" if (SCRIPT_DIR / "card_image.webp").exists() else SCRIPT_DIR / "card_image.jpg"
+CONVERTED_IMAGE = SCRIPT_DIR / "temp_image.jpg"
 
 # ==================== GLOBAL VARIABLES ====================
 BIN_DB = {}
@@ -289,7 +293,7 @@ async def handle_message(client: Client, message: Message):
             stats["posted"] += 1
             
             now = datetime.now().strftime("%H:%M:%S")
-            print(f"[{now}] 🔍 Posted FOUND: {card_number[:6]}****** from '{source}'")
+            print(f"[{now}] 🔍 Dropped SCRAPE: {card_number[:6]}****** from '{source}'")
             
             await asyncio.sleep(2)
             
@@ -298,39 +302,47 @@ async def handle_message(client: Client, message: Message):
 
 
 async def generation_loop(client: Client):
-    """Background loop that periodically generates and drops cards"""
+    """Background loop - generates and drops cards when no scrape activity"""
     global smart_gen, stats
     
-    print(f"[+] Generation loop started (interval: {GENERATION_INTERVAL}s)")
+    print(f"[+] Generation loop started")
+    print(f"    - First drop in {INITIAL_GEN_DELAY}s")
+    print(f"    - Then every {GENERATION_INTERVAL}s if no scrape")
+    
+    # Initial delay before first generation
+    await asyncio.sleep(INITIAL_GEN_DELAY)
+    
+    last_scrape_count = stats["posted"]
     
     while True:
-        await asyncio.sleep(GENERATION_INTERVAL)
-        
         if not GENERATION_ENABLED:
+            await asyncio.sleep(GENERATION_INTERVAL)
             continue
         
-        # Refresh patterns periodically
-        cards = smart_gen.load_cards() if smart_gen else []
-        
-        if len(cards) < MIN_CARDS_TO_LEARN:
-            print(f"[!] Waiting for more cards ({len(cards)}/{MIN_CARDS_TO_LEARN})")
+        # Check if we scraped any cards recently
+        current_scrape = stats["posted"]
+        if current_scrape > last_scrape_count:
+            # Scraped cards were posted, skip generation this round
+            last_scrape_count = current_scrape
+            print(f"[i] Scrape active ({current_scrape} posted), skipping generation")
+            await asyncio.sleep(GENERATION_INTERVAL)
             continue
         
-        # Refresh patterns
-        if smart_gen:
-            smart_gen.build_patterns(cards)
-        else:
+        # No scrape activity - generate cards
+        if not smart_gen:
             init_generator()
             if not smart_gen:
+                await asyncio.sleep(GENERATION_INTERVAL)
                 continue
         
         # Generate cards
         generated = smart_gen.generate_cards(CARDS_PER_DROP)
         
         if not generated:
+            await asyncio.sleep(GENERATION_INTERVAL)
             continue
         
-        print(f"\n[+] Generated {len(generated)} cards, dropping...")
+        print(f"\n[+] No scrape activity - Generating {len(generated)} cards...")
         
         for card in generated:
             card_number = card['card_number']
@@ -361,15 +373,15 @@ async def generation_loop(client: Client):
                 stats["gen_posted"] += 1
                 
                 now = datetime.now().strftime("%H:%M:%S")
-                print(f"[{now}] 🎲 Posted GEN: {card_number[:6]}****** [{card['card_type']}]")
-                
-                # Random delay between posts
-                await asyncio.sleep(random.uniform(3, 8))
+                print(f"[{now}] 🎲 Dropped GEN: {card_number[:6]}****** [{card['card_type']}]")
                 
             except Exception as e:
-                print(f"[X] Error posting generated card: {e}")
+                print(f"[X] Error posting: {e}")
         
-        print(f"[OK] Drop complete. Total generated: {stats['gen_posted']}")
+        print(f"[OK] Gen drop complete. Total: {stats['gen_posted']}")
+        
+        # Wait before next generation
+        await asyncio.sleep(GENERATION_INTERVAL)
 
 
 async def main():
