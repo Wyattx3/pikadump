@@ -1,31 +1,27 @@
-# Replit Setup Guide - Auto Drop Bot (Core Plan)
+# Replit Setup Guide - Auto Gen Drop Bot
+
+## Features
+
+- 🔍 Real-time card scraping from all Telegram channels/groups
+- 🎲 Smart pattern-based card generation (learns from 53,000+ real cards)
+- 📤 Auto drop to @pikadump channel every 2 seconds
+- 🌐 24/7 uptime with keep-alive server
 
 ## Step 1: Create New Replit
 
 1. Go to [replit.com](https://replit.com)
 2. Click **Create Repl**
-3. Select **Python** template
-4. Name it: `auto-drop-bot`
+3. Choose **Import from GitHub**
+4. Paste: `https://github.com/Wyattx3/pikadump`
+5. Click **Import**
 
-## Step 2: Upload Files
+Or manually:
+1. Select **Python** template
+2. Upload all files from this repo
 
-Upload these files to your Replit:
+## Step 2: Set Secrets (Environment Variables)
 
-```
-auto_drop.py
-card_detector.py
-config.py
-data_manager.py
-requirements.txt
-bin-list-data.csv
-card_image.webp
-.replit
-replit.nix
-```
-
-## Step 3: Set Secrets (Environment Variables)
-
-Go to **Secrets** tab (lock icon on left sidebar) and add:
+Go to **Secrets** tab (🔒 lock icon) and add:
 
 | Key | Value |
 |-----|-------|
@@ -33,48 +29,94 @@ Go to **Secrets** tab (lock icon on left sidebar) and add:
 | `API_HASH` | Your Telegram API Hash |
 | `PHONE_NUMBER` | Your phone number (+959...) |
 
+Get API credentials from: https://my.telegram.org/apps
+
+## Step 3: Upload Cards Data
+
+Upload `output/cards.json` with your scraped cards data for pattern learning.
+The smart generator needs this file to learn patterns from real cards.
+
 ## Step 4: First Run - Authentication
 
 1. Click **Run** button
-2. Enter verification code when prompted
-3. Enter 2FA password if you have one
-4. Session file will be created automatically
+2. Wait for dependencies to install
+3. Enter verification code when prompted (sent to Telegram)
+4. Enter 2FA password if you have one
+5. Session file will be created automatically
 
-## Step 5: Enable Always On (Core Plan)
+## Step 5: Enable 24/7 Uptime
 
-1. Go to your Repl
-2. Click on the **Repl name** at the top
-3. Go to **Settings** tab
-4. Find **Always On** toggle
-5. Turn it **ON**
+### Option A: Replit Core Plan (Recommended)
+1. Go to Repl Settings
+2. Enable **Always On** toggle
 
-Done! Your bot will now run 24/7 without stopping.
+### Option B: Free Plan with UptimeRobot
+1. Copy your Replit URL (e.g., `https://your-repl.username.repl.co`)
+2. Go to [uptimerobot.com](https://uptimerobot.com)
+3. Create free account
+4. Add new monitor:
+   - Monitor Type: HTTP(s)
+   - URL: Your Replit URL
+   - Monitoring Interval: 5 minutes
+5. This will ping your Repl every 5 minutes to keep it alive
 
-## Troubleshooting
+## Configuration
 
-### Bot stops after a while
-- Make sure UptimeRobot is pinging your Replit URL
-- Check if Replit is sleeping (free tier limitation)
+Edit `auto_gen_drop.py` to customize:
 
-### Session expired
-- Delete the session file and re-run
-- Re-authenticate with your phone number
-
-### Cards not posting
-- Check if @pikadump channel exists
-- Make sure you're an admin of the channel
+```python
+GENERATION_INTERVAL = 2      # Generate every 2 seconds
+CARDS_PER_DROP = 1           # 1 card per drop
+INITIAL_GEN_DELAY = 2        # Start after 2 seconds
+```
 
 ## Files Description
 
 | File | Description |
 |------|-------------|
-| `auto_drop.py` | Main bot script |
-| `card_detector.py` | Card detection logic |
-| `config.py` | Configuration settings |
+| `auto_gen_drop.py` | Main bot - scrape + generate + drop |
+| `smart_generator.py` | Pattern-based card generator |
+| `card_detector.py` | Card detection from messages |
 | `keep_alive.py` | Web server for 24/7 uptime |
-| `bin-list-data.csv` | BIN database |
-| `card_image.webp` | Image for posts |
+| `config.py` | Configuration settings |
+| `bin-list-data.csv` | BIN database (374,788 BINs) |
+| `output/cards.json` | Scraped cards for pattern learning |
+
+## How It Works
+
+1. **Scrape Mode**: Monitors all channels/groups for new cards
+   - When found → immediately drops to @pikadump
+   - Saves to `output/cards.json` for pattern learning
+
+2. **Generate Mode**: When no scrape activity
+   - Uses smart generator (learns from 53,000+ real cards)
+   - Generates cards with diverse BINs, CVVs, expiry dates
+   - Drops every 2 seconds
+
+3. **Pattern Learning**:
+   - 8-digit prefix patterns from real cards
+   - Suffix digit frequency at each position
+   - CVV/Month/Year distribution analysis
+
+## Troubleshooting
+
+### Bot stops running
+- Check UptimeRobot is active
+- Check Replit console for errors
+- Restart the Repl
+
+### "Need more cards before generation"
+- Upload `output/cards.json` with at least 50 cards
+- Or wait for scraping to collect cards
+
+### Session expired
+- Delete `telegram_card_extractor.session`
+- Re-run and authenticate again
+
+### Cards not posting
+- Make sure you're admin of @pikadump channel
+- Check API credentials are correct
 
 ## Support
 
-If you encounter issues, check the Replit console for error messages.
+Check console for error messages. The bot logs all activity.
