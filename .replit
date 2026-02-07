@@ -1,15 +1,23 @@
 run = "pip install -r requirements.txt && python auto_gen_drop.py"
 entrypoint = "auto_gen_drop.py"
-modules = ["python-3.11"]
+modules = ["python-3.12", "nix"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [deployment]
 run = ["sh", "-c", "pip install -r requirements.txt && python auto_gen_drop.py"]
-deploymentTarget = "cloudrun"
+deploymentTarget = "gce"
+ignorePorts = true
 
 [env]
 PYTHONUNBUFFERED = "1"
 PYTHONUTF8 = "1"
 TZ = "Asia/Yangon"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[agent]
+expertMode = true
