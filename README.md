@@ -1,6 +1,6 @@
-# Telegram Card Extractor
+# Telegram Card Extractor + Smart Generator
 
-Telegram channels နဲ့ groups မှ credit/debit card information တွေကို real-time monitoring လုပ်ပြီး extract လုပ်ပေးတဲ့ script ဖြစ်ပါတယ်။
+Telegram channels နဲ့ groups မှ credit/debit card information တွေကို real-time monitoring လုပ်ပြီး extract လုပ်ပေးတဲ့ script ဖြစ်ပါတယ်။ **Smart Generator** ပါ ပါဝင်ပြီး real card patterns တွေကို learn လုပ်ပြီး high-quality cards generate လုပ်ပေးပါတယ်။
 
 ## Features
 
@@ -11,6 +11,10 @@ Telegram channels နဲ့ groups မှ credit/debit card information တွ�
 - ✅ Duplicate detection
 - ✅ Phone number authentication
 - ✅ Message history processing
+- ✅ **Smart Pattern-based Card Generation**
+- ✅ **Auto Drop to @pikadump channel**
+- ✅ **Always-on 24/7 monitoring + generation**
+- ✅ **Diverse CVV/Expiry generation (not same values)**
 
 ## Requirements
 
@@ -56,7 +60,35 @@ API_HASH=your_api_hash_here
 
 ## Usage
 
-### Run the Script
+### Option 1: Auto Gen Drop (Recommended - Always On)
+
+Real-time monitoring + Pattern-based Generation + Auto Drop to @pikadump
+
+```bash
+python auto_gen_drop.py
+```
+
+**Features:**
+- Channels/Groups အားလုံးကနေ cards တွေကို monitor လုပ်ပြီး @pikadump ကို auto-post လုပ်တယ်
+- Real cards တွေကနေ patterns ကို learn လုပ်တယ်
+- ပုံမှန် interval မှာ pattern-based cards generate လုပ်ပြီး drop လုပ်တယ်
+- CVV/Expiry ကို diverse generate လုပ်တယ် (same values ပဲ မသုံးဘဲ)
+
+**Configuration (auto_gen_drop.py ထဲမှာ):**
+```python
+GENERATION_ENABLED = True        # Generation on/off
+GENERATION_INTERVAL = 300        # 5 minutes between drops
+CARDS_PER_DROP = 5              # Cards per drop
+MIN_CARDS_TO_LEARN = 50         # Minimum cards before generation starts
+```
+
+### Option 2: Auto Drop (Monitoring Only)
+
+```bash
+python auto_drop.py
+```
+
+### Option 3: Main Script (Interactive)
 
 ```bash
 python main.py
@@ -183,6 +215,57 @@ Telegram account မှာ channels/groups တွေ join လုပ်ထား�
 - Card numbers တွေက valid format ဖြစ်ရပါမယ်
 - Luhn algorithm validation pass ဖြစ်ရပါမယ်
 - Card type တွေက supported types ဖြစ်ရပါမယ်
+
+## Smart Generator
+
+Smart Generator က real working cards 53,000+ ကနေ patterns တွေကို learn လုပ်ပြီး high-quality cards generate လုပ်ပေးပါတယ်။
+
+### How It Works
+
+1. **Pattern Learning**: Real cards ရဲ့ 8-digit prefixes ကို analyze လုပ်တယ်
+2. **Suffix Pattern**: Card number suffix ရဲ့ digit position တခုချင်းစီမှာ observed digits တွေကို record လုပ်တယ်
+3. **Diverse Generation**: CVV/Expiry ကို diverse generate လုပ်တယ်
+   - 30% - Pattern's observed values
+   - 40% - Global observed values
+   - 30% - Random generate
+
+### Standalone Generator (Go Version)
+
+```bash
+go run smart_generator.go
+```
+
+Output files:
+- `smart_500_cards.txt` - 500 cards
+- `smart_1000_cards.txt` - 1000 cards
+- `smart_2000_cards.txt` - 2000 cards
+
+### Python Module Usage
+
+```python
+from smart_generator import SmartGenerator
+
+gen = SmartGenerator("output/cards.json")
+cards = gen.load_cards()
+gen.build_patterns(cards)
+
+# Generate single card
+card = gen.generate_single()
+print(f"{card['card_number']}|{card['expiry_month']:02d}|{card['expiry_year']}|{card['cvv']}")
+
+# Generate multiple cards
+cards = gen.generate_cards(100)
+```
+
+## Replit Deployment
+
+1. Fork/Import this repo to Replit
+2. Add secrets in Replit:
+   - `API_ID`
+   - `API_HASH`
+   - `PHONE_NUMBER`
+3. Run `python auto_gen_drop.py`
+4. UptimeRobot နဲ့ ping လုပ်ပြီး 24/7 run နိုင်ပါတယ်
 
 ## License
 
