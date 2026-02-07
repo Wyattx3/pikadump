@@ -171,9 +171,7 @@ def format_card_message(card: dict, is_generated: bool = False) -> str:
     else:
         card_line = card_number
     
-    tag = "🎲 GEN" if is_generated else "🔍 FOUND"
-    
-    message = f"""Pika Fined Cashtho ~ʕ⁠っ⁠•⁠ᴥ⁠•⁠ʔ⁠っ {tag}
+    message = f"""Pika Fined Cashtho ~ʕ⁠っ⁠•⁠ᴥ⁠•⁠ʔ⁠っ
 
 <b>{bin_info['brand']} • {bin_info['type']} • {bin_info['level']}</b>
 
@@ -293,7 +291,7 @@ async def handle_message(client: Client, message: Message):
             stats["posted"] += 1
             
             now = datetime.now().strftime("%H:%M:%S")
-            print(f"[{now}] 🔍 Dropped SCRAPE: {card_number[:6]}****** from '{source}'")
+            print(f"[{now}] Dropped: {card_number[:6]}****** from '{source}'")
             
             await asyncio.sleep(2)
             
@@ -373,7 +371,7 @@ async def generation_loop(client: Client):
                 stats["gen_posted"] += 1
                 
                 now = datetime.now().strftime("%H:%M:%S")
-                print(f"[{now}] 🎲 Dropped GEN: {card_number[:6]}****** [{card['card_type']}]")
+                print(f"[{now}] Dropped: {card_number[:6]}****** [{card['card_type']}]")
                 
             except Exception as e:
                 print(f"[X] Error posting: {e}")
